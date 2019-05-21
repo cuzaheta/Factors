@@ -1,6 +1,8 @@
-# Ignore Rdata, rdata, rds files
-*.[rR]data
-*.[rR]ds
+# Ignore rdata or rds files
+#.[rR]([dD]ata|ds)
+*.RData
+*.rds
+
 # Ignore xlsx, word, pdf files
 *.xlsx
 *.xls
@@ -8,6 +10,26 @@
 *.doc
 *.dot
 
-# Except this file
-
+# Except this proyect Rstudio directory.  
 .Rproj.user
+
+# Tomado de: https://git-scm.com/book/es/v2/Fundamentos-de-Git-Guardando-cambios-en-el-Repositorio
+# ignora los archivos terminados en .a
+#*.a
+
+# pero no lib.a, aun cuando había ignorado los archivos terminados en .a en la linea anterior
+#!lib.a
+
+# ignora unicamente el archivo TODO de la raiz, no subdir/TODO
+#/TODO
+
+# ignora todos los archivos del directorio build/
+#build/
+
+# ignora doc/notes.txt, pero este no doc/server/arch.txt
+#doc/*.txt
+
+# ignora todos los archivos .txt el directorio doc/
+#doc/**/*.txt
+
+#También puedes usar dos asteriscos para indicar directorios anidados; a/**/z coincide con a/z, a/b/z, a/b/c/z, etc.
