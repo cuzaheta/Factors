@@ -1,0 +1,12 @@
+# Ignore Rdata, rdata, rds files
+*.[rR]data
+*.[rR]ds
+# Ignore xlsx, word, pdf files
+*.xlsx
+*.xls
+*.odt
+*.doc
+*.dot
+
+# Except this file
+
