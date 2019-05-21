@@ -1,0 +1,1 @@
+En este archivo se escribe cuales son los archivos que se encuentran en el input
