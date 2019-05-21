@@ -18,6 +18,8 @@ library(TTR)
 library(lubridate)
 library(tsibble)
 
+
+
 # path --------------------------------------------------------------------
 inPath <- file.path('input')
 outPath <- file.path('output')
