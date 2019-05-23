@@ -12,6 +12,7 @@
 
 # Except this proyect Rstudio directory.  
 .Rproj.user
+.Rhistory
 
 # Tomado de: https://git-scm.com/book/es/v2/Fundamentos-de-Git-Guardando-cambios-en-el-Repositorio
 # ignora los archivos terminados en .a

@@ -1,0 +1,19 @@
+C:\Users\Uzaheta\Desktop\TutorialD3\CoordinatePlot>python -m http.server 8888 &.
+
+For this reason, it is more reliable to load your page via a web server. Although you could use a
+remote web server, it is much faster to store and host everything locally (meaning, on the same
+computer, the one right in front of you).
+
+problemas para poder cargar archivos externos.
+
+Pararse en la que esta el proyecto y correr lo siguiente
+
+Para python2:
+python -m SimpleHTTPServer 8888 &.
+
+Para python3:
+python -m http.server 8888 &.
+
+Switch back to your web browser and visit the following
+URL: 
+http://localhost:8888/
