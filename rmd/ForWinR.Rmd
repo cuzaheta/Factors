@@ -1,6 +1,9 @@
 ---
 output:
-  html_document
+  # md_document:
+  #   variant: gfm
+  html_document:
+    self_contained: false
 ---
 
 # Implementación de indicadores <img src="logo/logo.png" align="right" />
