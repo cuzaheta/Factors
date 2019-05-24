@@ -1,0 +1,16 @@
+
+.customBlock {
+  padding: 1em 1em 1em 1em;
+  margin-bottom: 10px;
+  background: #F8F9F9;
+  border-color: #0366d6 !important;
+  background-color:#f1f8ff !important;
+  border-style: solid;
+  border-radius: 10px;
+  border-width: thin;
+}
+
+/*h2 {
+  color : blue;
+}
+*/

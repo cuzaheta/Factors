@@ -116,6 +116,8 @@ for (i in 1:nrow(datosAll)) {
   datosAll$datos[[i]] <- tbl.datos
 }
 
+
+
 datosAll %>% 
   unnest()
 

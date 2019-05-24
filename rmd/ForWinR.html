@@ -68,6 +68,7 @@ h6 {
 }
 </style>
 
+<link rel="stylesheet" href="style.css" type="text/css" />
 
 </head>
 
@@ -124,6 +125,8 @@ $(document).ready(function () {
 </div>
 
 
+<!-- # bookdown::html_document2: -->
+<!-- # bookdown::pdf_document2: -->
 <div id="implementacion-de-indicadores" class="section level1">
 <h1>Implementación de indicadores <img src="logo/logo.png" align="right" /></h1>
 <p><a href="https://www.tidyverse.org/lifecycle/#stable"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Life cycle" /></a> <img src="https://codecov.io/gh/tidyverse/magrittr/branch/master/graph/badge.svg" alt="Codecov test coverage" /></p>
@@ -134,24 +137,63 @@ $(document).ready(function () {
 -->
 <div id="sinopsis" class="section level2">
 <h2>Sinopsis</h2>
-<p>Es una breve descripción del flujo de las funciones para realizar backtesting apartir de una estrategia. Y el uso de estos.</p>
+<p>Es una breve descripción del flujo de las funciones para realizar backtesting a partir de una estrategia. Y el uso de este para implementación de distintas estrategias de trading.</p>
 <div id="estrategia" class="section level3">
 <h3>Estrategia</h3>
-<p>Se considera una estrategía como una combinación de indicadores y reglas para generar señales para entrar y salir de transacciones. La idea detras de esto se presenta en la siguiente grafica:</p>
+<p>Se considera una estrategia como una combinación de indicadores y reglas para generar señales para entrar y salir de transacciones. La idea detrás de esto se presenta en la siguiente gráfica:</p>
 <div style="text-align: center">
 <p><img src="estrategia.png" align="center" /></p>
 </div>
-<p>Esto permite realizar distintas modificaciones a la estrategía:</p>
+<p>Esto permite realizar distintas modificaciones a la estrategia:</p>
 <ul>
-<li><p>Si se desea realizar una estrategía con mas de un indicador-señal, entonces se puede generar varias señales y luego con algúna función combinarlas para convertirla en una señal.</p></li>
-<li><p>Cambiar la función que genera las ordenes,</p></li>
+<li><p>Si se desea realizar una estrategia con mas de una combinación indicador-señal. Se puede generar varias señales (con la función <em>Indicador_señal(.)</em>) y luego con alguna función ( <em>mix_señal(.)</em>) combinarlas para convertirla en una señal.</p></li>
+<li><p>A partir de la señal generada se utiliza la función <em>orden(.)</em> la cual puede variar. Por ejemplo: puede ser ordenes normales, ordenes con stop loss, ordenes con stop loss movil, dependiendo de la que quede mejor con la estrategia. (Nota: no todas les funciona el mismo sistema de ordenes, por ejemplo, bandas de bollinger no funciona muy bien con un stop loss movil ya que es un indicador para identificar señales en rango (choppy market) es mejor un stop loss fijo, funcionando como una especie de support)</p></li>
+<li><p>Y por ultimo, la salida de la función <em>orden(.)</em> se pasa por transacciones, la cuál computa el backtesting de la estrategia.</p></li>
 </ul>
-<p>Se busca describir el flujo de las funciones para generar backtesting de diferentes estrategias, apartir de indicadores. Y el uso de este.</p>
+<p>Algo importante para notar en este caso es que las tres funciones principales <em>Indicador_señal(.)</em>, <em>orden(.)</em> y <em>transacciones(.)</em> necesitan de los datos, esto permite poder utilizar en cada paso información diferente de los datos, es claro que en el calculo de un indicador se utiliza diferente información, al igual que la función de <em>orden(.)</em> que por construcción puede utilizar cualquier información de los datos, por ejemplo el stop loss movil utiliza el promedio movil ponderado de los close para ir moviendo el valor del stop movil en vez de tomar la serie del close ya que esta esta es mas volátil.</p>
 </div>
+</div>
+<div id="tabla-de-especificaciones-basicas-tbl.specs" class="section level2">
+<h2>Tabla de especificaciones básicas <code>tbl.specs</code></h2>
+<p>En esta tabla se encuentra las especificaciones esenciales para poder programar la estrategia. En ella se encuentra lo siguiente:</p>
+<ul>
+<li><strong>nameInd</strong> := Nombre corto y único para llamar la estrategia.</li>
+<li><strong>f</strong> := Nombre de la función que calcula los indicadores.</li>
+<li><strong>dat.f</strong> := Nombre de la función que selecciona los datos, los cuales entrar como argumento principal a la función <strong>f</strong>.</li>
+<li><strong>sig.f</strong> := Nombre de la función que calcula las señales a partir de la salida de <strong>f</strong>.</li>
+<li><strong>parms</strong> := Parámetros para el calculo del indicador, en forma de lista.</li>
+<li><strong>sig.parms</strong> := Parámetros para el calculo de la señal, en forma de lista.</li>
+</ul>
+<pre class="r"><code>tbl.specs &lt;- tribble(
+  ~nameInd, ~f, ~dat.f, ~sig.f, ~parms, ~sig.parms,
+  &#39;adx&#39;, &#39;ADX&#39;, &#39;hlc&#39;, &#39;sig.ADXL&#39;, list(), list(limit = 25),
+  &#39;smaTwo&#39;, &#39;SMAtwo&#39;, &#39;cl&#39;, &#39;sig.SMAtwo&#39;, list(nfast = 30, nslow = 100), list(),
+  &#39;bands&#39;, &#39;BBands&#39;, &#39;hlc&#39;, &#39;sig.BBands&#39;, list(), list()
+)
+
+tbl.specs</code></pre>
+<pre><code>## # A tibble: 3 x 6
+##   nameInd f      dat.f sig.f      parms      sig.parms 
+##   &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt; &lt;chr&gt;      &lt;list&gt;     &lt;list&gt;    
+## 1 adx     ADX    hlc   sig.ADXL   &lt;list [0]&gt; &lt;list [1]&gt;
+## 2 smaTwo  SMAtwo cl    sig.SMAtwo &lt;list [2]&gt; &lt;list [0]&gt;
+## 3 bands   BBands hlc   sig.BBands &lt;list [0]&gt; &lt;list [0]&gt;</code></pre>
+<p>Por el momento son muchas cosas para determinar, pero esto facilita la forma de poder usarlas en la forma actual del código. Si en las columnas <strong>parms</strong> y <strong>sig.parms</strong> se dejan listas vacías, el toma los parámetros que tiene por defecto las funciones <strong>f</strong> y <strong>sig.f</strong> o pueden variar al antojo (para hacer tunning de la estrategia).</p>
+<div class="customBlock">
+<p><strong>NOTA:</strong> Es importante que los nombres de las funciones en la tabla <code>tbl.specs</code> estén cargadas antes de proseguir. La mayoría de funciones para calcular indicadores salen del paquete <code>TTR</code>, por lo tanto es necesario siempre tener cargado este paquete.</p>
+</div>
+</div>
+<div id="indseg.-la-funcion-indicador_senal." class="section level2">
+<h2><code>indSeg(.)</code> la función <em>Indicador_señal(.)</em></h2>
+<p>Esta función genera un vector con las señales producto de un indicador, cuenta con los siguiente parámetros.</p>
+<pre class="r"><code>args(indSeg)</code></pre>
+<pre><code>## function (parm = NULL, sigParm = NULL, datos, indName) 
+## NULL</code></pre>
+<p>Como se puede ver en los argumentos, es necesario darle la tabla de <code>datos</code> y el nombre del indicador <code>indName</code> (El de la tabla <code>tbl.specs</code>) y opcional se puede dar una lista de parametros para la función del indicador <code>parm</code>, como para la función de la señal <code>sigParm</code>, si no queda los parametros que se encuentran en <code>tbl.specs</code>. Que la función este de este forma nos permite</p>
 </div>
 <div id="archivos" class="section level2">
 <h2>Archivos</h2>
-<p>Hay tres codigos los cuales contienen las distintas funciones que configuran el flujo.</p>
+<p>Hay tres códigos los cuales contienen las distintas funciones que configuran el flujo.</p>
 </div>
 <div id="read_sheet" class="section level2">
 <h2><code>read_sheet()</code></h2>

@@ -1,11 +1,16 @@
 ---
 output:
-  md_document:
-      pandoc_args: [ "-oREADME.md" ]
-      # variant: gfm
-  #html_document:
-  #  self_contained: false
+  html_document:
+    self_contained: false
+    css: style.css
+  # md_document:
+  #   pandoc_args: [ "-oREADME.md" ]
+  #   variant: gfm
 ---
+
+<!-- # bookdown::html_document2: -->
+<!-- # bookdown::pdf_document2: -->
+
 
 # Implementación de indicadores <img src="logo/logo.png" align="right" />
 
@@ -21,32 +26,95 @@ output:
 
 ## Sinopsis
 
-Es una breve descripción del flujo de las funciones para realizar backtesting apartir de una estrategia. Y el uso de estos.
+Es una breve descripción del flujo de las funciones para realizar backtesting a partir de una estrategia. Y el uso de este para implementación de distintas estrategias de trading.
+
+```{r cargaFunciones, message=FALSE, warning=FALSE, include=FALSE}
+# Libraries
+library(tidyverse)
+library(TTR)
+
+inFunct <- file.path('../src','Funciones')
+c('Reglas.R','FuncionesBacktest.R', 'Ordenes.R') %>% 
+  file.path('../src/Funciones', .) %>% 
+  map(source, encoding = 'UTF8') %>% 
+  invisible()
+```
+
+```{r lecturaDatos, message=FALSE, warning=FALSE, include=FALSE}
+entra <- file.path("../input/dataPoloniexSel30MNTop.RData")
+load(entra)
+tbl.datos <- tibble(name=names(dataSel) %>% 
+                      str_replace(paste0('T','30MN','\\|'), ''), 
+                    data=dataSel) %>% 
+  mutate(data = map(data, select, -period, -pair),
+         data = map(data, ~as_tibble(.x) %>% 
+                      mutate(date = lubridate::ymd_hms(date))))
+```
+
 
 ### Estrategia
 
-Se considera una estrategía como una combinación de indicadores y reglas para generar señales para entrar y salir de transacciones. La idea detras de esto se presenta en la siguiente grafica:
+Se considera una estrategia como una combinación de indicadores y reglas para generar señales para entrar y salir de transacciones. La idea detrás de esto se presenta en la siguiente gráfica:
 
 <div style="text-align: center">
 <img src="estrategia.png" align="center" />
 </div>
 
 
-Esto permite realizar distintas modificaciones a la estrategía:
+Esto permite realizar distintas modificaciones a la estrategia:
 
-- Si se desea realizar una estrategía con mas de un indicador-señal, entonces se puede generar varias señales y luego con algúna función combinarlas para convertirla en una señal.
+- Si se desea realizar una estrategia con mas de una combinación indicador-señal. Se puede generar varias señales (con la función _Indicador_señal(.)_) y luego con alguna función ( _mix_señal(.)_) combinarlas para convertirla en una señal.
 
-- Cambiar la función que genera las ordenes, 
+- A partir de la señal generada se utiliza la función _orden(.)_ la cual puede variar. Por ejemplo: puede ser ordenes normales, ordenes con stop loss, ordenes con stop loss movil, dependiendo de la que quede mejor con la estrategia. (Nota: no todas les funciona el mismo sistema de ordenes, por ejemplo, bandas de bollinger no funciona muy bien con un stop loss movil ya que es un indicador para identificar señales en rango (choppy market) es mejor un stop loss fijo, funcionando como una especie de support) 
+
+- Y por ultimo, la salida de la función _orden(.)_ se pasa por transacciones, la cuál computa el backtesting de la estrategia.
+
+Algo importante para notar en este caso es que las tres funciones principales _Indicador_señal(.)_, _orden(.)_ y _transacciones(.)_ necesitan de los datos, esto permite poder utilizar en cada paso información diferente de los datos, es claro que en el calculo de un indicador se utiliza diferente información, al igual que la función de _orden(.)_ que por construcción puede utilizar cualquier información de los datos, por ejemplo el stop loss movil utiliza el promedio movil ponderado de los close para ir moviendo el valor del stop movil en vez de tomar la serie del close ya que esta esta es mas volátil.
+
+## Tabla de especificaciones básicas `tbl.specs`
+
+En esta tabla se encuentra las especificaciones esenciales para poder programar la estrategia. En ella se encuentra lo siguiente:
+
+- **nameInd** := Nombre corto y único para llamar la estrategia.
+- **f** := Nombre de la función que calcula los indicadores.
+- **dat.f** := Nombre de la función que selecciona los datos, los cuales entrar como argumento principal a la función **f**.
+- **sig.f** := Nombre de la función que calcula las señales a partir de la salida de **f**.
+- **parms** := Parámetros para el calculo del indicador, en forma de lista.
+- **sig.parms** := Parámetros para el calculo de la señal, en forma de lista. 
 
 
+```{r}
+tbl.specs <- tribble(
+  ~nameInd, ~f, ~dat.f, ~sig.f, ~parms, ~sig.parms,
+  'adx', 'ADX', 'hlc', 'sig.ADXL', list(), list(limit = 25),
+  'smaTwo', 'SMAtwo', 'cl', 'sig.SMAtwo', list(nfast = 30, nslow = 100), list(),
+  'bands', 'BBands', 'hlc', 'sig.BBands', list(), list()
+)
+
+tbl.specs
+```
+
+Por el momento son muchas cosas para determinar, pero esto facilita la forma de poder usarlas en la forma actual del código. Si en las columnas **parms** y **sig.parms** se dejan listas vacías, el toma los parámetros que tiene por defecto las funciones **f** y **sig.f** o pueden variar al antojo (para hacer tunning de la estrategia).
+
+<div class="customBlock">
+**NOTA:** Es importante que los nombres de las funciones en la tabla `tbl.specs` estén cargadas antes de proseguir. La mayoría de funciones para calcular indicadores salen del paquete `TTR`, por lo tanto es necesario siempre tener cargado este paquete.
+</div>
+
+## `indSeg(.)` la función _Indicador_señal(.)_
+
+Esta función genera un vector con las señales producto de un indicador, cuenta con los siguiente parámetros.
+
+```{r}
+args(indSeg)
+```
+
+Como se puede ver en los argumentos, es necesario darle la tabla de `datos` y el nombre del indicador `indName` (El de la tabla `tbl.specs`) y opcional se puede dar una lista de parametros para la función del indicador `parm`, como para la función de la señal `sigParm`, si no queda los parametros que se encuentran en `tbl.specs`. Que la función este de este forma nos permite  
 
 
-
-Se busca describir el flujo de las funciones para generar backtesting de diferentes estrategias, apartir de indicadores. Y el uso de este. 
 
 ## Archivos
 
-Hay tres codigos los cuales contienen las distintas funciones que configuran el flujo.
+Hay tres códigos los cuales contienen las distintas funciones que configuran el flujo.
 
 
 
