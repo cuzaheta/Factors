@@ -94,7 +94,7 @@ tbl.specs <- tribble(
 tbl.specs
 ```
 
-Por el momento son muchas cosas para determinar, pero esto facilita la forma de poder usarlas en la forma actual del código. Si en las columnas **parms** y **sig.parms** se dejan listas vacías, el toma los parámetros que tiene por defecto las funciones **f** y **sig.f** o pueden variar al antojo (para hacer tunning de la estrategia).
+Por el momento son muchas cosas para determinar, pero esto facilita la forma de poder usarlas en la forma actual del código. Si en las columnas **parms** y **sig.parms** se dejan listas vacías, el toma los parámetros que tiene por defecto las funciones **f** y **sig.f** o pueden variar al antojo (como para hacer tunning de la estrategia).
 
 <div class="customBlock">
 **NOTA:** Es importante que los nombres de las funciones en la tabla `tbl.specs` estén cargadas antes de proseguir. La mayoría de funciones para calcular indicadores salen del paquete `TTR`, por lo tanto es necesario siempre tener cargado este paquete.
