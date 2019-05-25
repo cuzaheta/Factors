@@ -70,9 +70,7 @@ h6 {
 
 <link rel="stylesheet" href="style.css" type="text/css" />
 
-</head>
 
-<body>
 
 <style type = "text/css">
 .main-container {
@@ -97,22 +95,92 @@ img {
 button.code-folding-btn:focus {
   outline: none;
 }
+summary {
+  display: list-item;
+}
 </style>
 
 
 
-<div class="container-fluid main-container">
-
 <!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
 <script>
 $(document).ready(function () {
   window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
 });
 </script>
 
 <!-- code folding -->
 
 
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
 
 
 
@@ -178,7 +246,7 @@ tbl.specs</code></pre>
 ## 1 adx     ADX    hlc   sig.ADXL   &lt;list [0]&gt; &lt;list [1]&gt;
 ## 2 smaTwo  SMAtwo cl    sig.SMAtwo &lt;list [2]&gt; &lt;list [0]&gt;
 ## 3 bands   BBands hlc   sig.BBands &lt;list [0]&gt; &lt;list [0]&gt;</code></pre>
-<p>Por el momento son muchas cosas para determinar, pero esto facilita la forma de poder usarlas en la forma actual del código. Si en las columnas <strong>parms</strong> y <strong>sig.parms</strong> se dejan listas vacías, el toma los parámetros que tiene por defecto las funciones <strong>f</strong> y <strong>sig.f</strong> o pueden variar al antojo (para hacer tunning de la estrategia).</p>
+<p>Por el momento son muchas cosas para determinar, pero esto facilita la forma de poder usarlas en la forma actual del código. Si en las columnas <strong>parms</strong> y <strong>sig.parms</strong> se dejan listas vacías, el toma los parámetros que tiene por defecto las funciones <strong>f</strong> y <strong>sig.f</strong> o pueden variar al antojo (como para hacer tunning de la estrategia).</p>
 <div class="customBlock">
 <p><strong>NOTA:</strong> Es importante que los nombres de las funciones en la tabla <code>tbl.specs</code> estén cargadas antes de proseguir. La mayoría de funciones para calcular indicadores salen del paquete <code>TTR</code>, por lo tanto es necesario siempre tener cargado este paquete.</p>
 </div>
