@@ -2,7 +2,11 @@
 output:
   html_document:
     self_contained: false
+    toc: true
+    toc_float: true
+    toc_depth: 3 # Default en 3
     css: style.css
+    
   # md_document:
   #   pandoc_args: [ "-oREADME.md" ]
   #   variant: gfm
@@ -12,7 +16,8 @@ output:
 <!-- # bookdown::pdf_document2: -->
 
 
-# Implementación de indicadores <img src="logo/logo.png" align="right" />
+## Implementación de indicadores <img src="logo/logo.png" align="right" />
+
 
 [![Life cycle](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#stable)
 ![Codecov test coverage](https://codecov.io/gh/tidyverse/magrittr/branch/master/graph/badge.svg)
@@ -108,7 +113,9 @@ Esta función genera un vector con las señales producto de un indicador, cuenta
 args(indSeg)
 ```
 
-Como se puede ver en los argumentos, es necesario darle la tabla de `datos` y el nombre del indicador `indName` (El de la tabla `tbl.specs`) y opcional se puede dar una lista de parametros para la función del indicador `parm`, como para la función de la señal `sigParm`, si no queda los parametros que se encuentran en `tbl.specs`. Que la función este de este forma nos permite  
+Como se puede ver en los argumentos, es necesario darle la tabla de `datos` y el nombre del indicador `indName` (El de la tabla `tbl.specs`) y opcionalmente se pueden dar lista para los parámetros `parm` y `sigParm`. La ventaja de esta función es que nos permite realizar tunning de los parametros. 
+
+### Funciones `f` y `sig.f`
 
 
 

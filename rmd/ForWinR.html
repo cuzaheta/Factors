@@ -19,6 +19,9 @@
 <script src="ForWinR_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="ForWinR_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="ForWinR_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="ForWinR_files/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="ForWinR_files/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="ForWinR_files/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="ForWinR_files/navigation-1.1/tabsets.js"></script>
 <link href="ForWinR_files/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="ForWinR_files/highlightjs-9.12.0/highlight.js"></script>
@@ -174,6 +177,92 @@ $(document).ready(function () {
 
 
 
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
 
 </head>
 
@@ -181,6 +270,16 @@ $(document).ready(function () {
 
 
 <div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
 
 
 
@@ -195,14 +294,15 @@ $(document).ready(function () {
 
 <!-- # bookdown::html_document2: -->
 <!-- # bookdown::pdf_document2: -->
-<div id="implementacion-de-indicadores" class="section level1">
-<h1>Implementación de indicadores <img src="logo/logo.png" align="right" /></h1>
+<div id="implementacion-de-indicadores" class="section level2">
+<h2>Implementación de indicadores <img src="logo/logo.png" align="right" /></h2>
 <p><a href="https://www.tidyverse.org/lifecycle/#stable"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Life cycle" /></a> <img src="https://codecov.io/gh/tidyverse/magrittr/branch/master/graph/badge.svg" alt="Codecov test coverage" /></p>
 <!---
 [![Buil Status](https://travis-ci.org/tidyverse/purrr.svg?branch=master)](https://travis-ci.org/tidyverse/purrr)
 [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/tidyverse/purrr?branch=master&svg=true)](https://ci.appveyor.com/project/tidyverse/purrr)
 [![Coverage Status](https://img.shields.io/codecov/c/github/tidyverse/purrr/master.svg)](https://codecov.io/github/tidyverse/purrr?branch=master)
 -->
+</div>
 <div id="sinopsis" class="section level2">
 <h2>Sinopsis</h2>
 <p>Es una breve descripción del flujo de las funciones para realizar backtesting a partir de una estrategia. Y el uso de este para implementación de distintas estrategias de trading.</p>
@@ -257,7 +357,10 @@ tbl.specs</code></pre>
 <pre class="r"><code>args(indSeg)</code></pre>
 <pre><code>## function (parm = NULL, sigParm = NULL, datos, indName) 
 ## NULL</code></pre>
-<p>Como se puede ver en los argumentos, es necesario darle la tabla de <code>datos</code> y el nombre del indicador <code>indName</code> (El de la tabla <code>tbl.specs</code>) y opcional se puede dar una lista de parametros para la función del indicador <code>parm</code>, como para la función de la señal <code>sigParm</code>, si no queda los parametros que se encuentran en <code>tbl.specs</code>. Que la función este de este forma nos permite</p>
+<p>Como se puede ver en los argumentos, es necesario darle la tabla de <code>datos</code> y el nombre del indicador <code>indName</code> (El de la tabla <code>tbl.specs</code>) y opcionalmente se pueden dar lista para los parámetros <code>parm</code> y <code>sigParm</code>. La ventaja de esta función es que nos permite realizar tunning de los parametros.</p>
+<div id="funciones-f-y-sig.f" class="section level3">
+<h3>Funciones <code>f</code> y <code>sig.f</code></h3>
+</div>
 </div>
 <div id="archivos" class="section level2">
 <h2>Archivos</h2>
@@ -306,10 +409,11 @@ mtcars %&gt;%
 <h2>Code of conduct</h2>
 <p>Please note that this project is released with a <a href="CODE_OF_CONDUCT.md">Contributor Code of Conduct</a>. By participating in this project you agree to abide by its terms.</p>
 </div>
+
+
+
 </div>
-
-
-
+</div>
 
 </div>
 
