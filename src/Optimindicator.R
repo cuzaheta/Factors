@@ -177,8 +177,6 @@ trans %>%
   plotTest()
 
 
-
-
 # trans1 <- orden %>% 
 #   fun.tran(base5)
 # trans1 %>% plotTest()

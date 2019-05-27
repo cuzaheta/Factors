@@ -2,22 +2,18 @@
 output:
   html_document:
     self_contained: false
-    toc: true
-    toc_float: true
-    toc_depth: 3 # Default en 3
     css: style.css
-    
   # md_document:
-  #   pandoc_args: [ "-oREADME.md" ]
-  #   variant: gfm
+    # pandoc_args: [ "--output= README.md" ]
+    # variant: gfm
 ---
 
 <!-- # bookdown::html_document2: -->
 <!-- # bookdown::pdf_document2: -->
 
+<!-- <p style="font-size:34px;line-height: 1.1;">Implementación de indicadores</p> -->
 
-## Implementación de indicadores <img src="logo/logo.png" align="right" />
-
+# Implementación de indicadores <img src="logo/logo.png" align="right" />
 
 [![Life cycle](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#stable)
 ![Codecov test coverage](https://codecov.io/gh/tidyverse/magrittr/branch/master/graph/badge.svg)
@@ -31,7 +27,7 @@ output:
 
 ## Sinopsis
 
-Es una breve descripción del flujo de las funciones para realizar backtesting a partir de una estrategia. Y el uso de este para implementación de distintas estrategias de trading.
+Es una breve descripción del flujo de las funciones para realizar backtesting a partir de una estrategia y el uso de este para la implementación de distintas estrategias de trading. Aún se esta mejorando el uso de este.
 
 ```{r cargaFunciones, message=FALSE, warning=FALSE, include=FALSE}
 # Libraries
@@ -43,6 +39,10 @@ c('Reglas.R','FuncionesBacktest.R', 'Ordenes.R') %>%
   file.path('../src/Funciones', .) %>% 
   map(source, encoding = 'UTF8') %>% 
   invisible()
+
+# Global
+fee <- 0.002
+vInver <- 100
 ```
 
 ```{r lecturaDatos, message=FALSE, warning=FALSE, include=FALSE}
@@ -57,7 +57,7 @@ tbl.datos <- tibble(name=names(dataSel) %>%
 ```
 
 
-### Estrategia
+## Estrategia
 
 Se considera una estrategia como una combinación de indicadores y reglas para generar señales para entrar y salir de transacciones. La idea detrás de esto se presenta en la siguiente gráfica:
 
@@ -76,7 +76,7 @@ Esto permite realizar distintas modificaciones a la estrategia:
 
 Algo importante para notar en este caso es que las tres funciones principales _Indicador_señal(.)_, _orden(.)_ y _transacciones(.)_ necesitan de los datos, esto permite poder utilizar en cada paso información diferente de los datos, es claro que en el calculo de un indicador se utiliza diferente información, al igual que la función de _orden(.)_ que por construcción puede utilizar cualquier información de los datos, por ejemplo el stop loss movil utiliza el promedio movil ponderado de los close para ir moviendo el valor del stop movil en vez de tomar la serie del close ya que esta esta es mas volátil.
 
-## Tabla de especificaciones básicas `tbl.specs`
+## Tabla de especificaciones `tbl.specs`
 
 En esta tabla se encuentra las especificaciones esenciales para poder programar la estrategia. En ella se encuentra lo siguiente:
 
@@ -105,76 +105,142 @@ Por el momento son muchas cosas para determinar, pero esto facilita la forma de 
 **NOTA:** Es importante que los nombres de las funciones en la tabla `tbl.specs` estén cargadas antes de proseguir. La mayoría de funciones para calcular indicadores salen del paquete `TTR`, por lo tanto es necesario siempre tener cargado este paquete.
 </div>
 
-## `indSeg(.)` la función _Indicador_señal(.)_
+## `indSeg(.)` la función _Indicador_señal_
 
-Esta función genera un vector con las señales producto de un indicador, cuenta con los siguiente parámetros.
+Esta función genera un vector con las señales producto de un indicador. Está se encuentra en "src/Funciones/FunEstrategia.R" y cuenta con los siguiente parámetros.
 
 ```{r}
 args(indSeg)
 ```
 
-Como se puede ver en los argumentos, es necesario darle la tabla de `datos` y el nombre del indicador `indName` (El de la tabla `tbl.specs`) y opcionalmente se pueden dar lista para los parámetros `parm` y `sigParm`. La ventaja de esta función es que nos permite realizar tunning de los parametros. 
+Como se puede ver en los argumentos, es necesario darle la tabla de `datos`, el nombre del indicador `indName` y opcionalmente se pueden las listas de los parámetros `parm` y `sigParm`. La ventaja de esta función es que nos permite realizar tunning de los parametros o poder combinar varias señales en una. 
 
 ### Funciones `f` y `sig.f`
 
+Estas funciones deben estar cargadas, la mayoría de veces la función que calcula el indicador `f` se encuentra en el paquete `TTR`. Pero se pueden crear nuevos indicadores escribiendo su función en el script "src/Funciones/Reglas.R", al igual que la función `sig.f` y `dat.f`, de la siguiente forma [ver script](https://github.com/cuzaheta/Factors/blob/master/src/Funciones/Reglas.R):
 
-
-## Archivos
-
-Hay tres códigos los cuales contienen las distintas funciones que configuran el flujo.
-
-
-
-
-## `read_sheet()`
-
-`read_sheet()` is the main "read" function and should evoke `readr::read_csv()` and `readxl::read_excel()`. It's an alias for `sheets_read()`. Most functions in googlesheets4 actually start with `sheets_`. googlesheets4 is pipe-friendly (and reexports `%>%`), but works just fine without the pipe.
-
-
-purrr enhances R's functional programming (FP) toolkit by providing a complete and consistent set of tools for working with functions and vectors. If you've never heard of FP before, the best place to start is the family of `map()` functions which allow you to replace many for loops with code that is both more succinct and easier to read. The best place to learn about the `map()` functions is the [iteration chapter](http://r4ds.had.co.nz/iteration.html) in R for data science.
-
-## Installation
-
-```{r, eval = FALSE}
-# The easiest way to get purrr is to install the whole tidyverse:
-install.packages("tidyverse")
-# Alternatively, install just purrr:
-install.packages("purrr")
-# Or the the development version from GitHub:
-# install.packages("devtools")
-devtools::install_github("tidyverse/purrr")
-```
-
-## Cheatsheet
-<!---
-<a href="https://github.com/rstudio/cheatsheets/blob/master/purrr.pdf"><img src="https://raw.githubusercontent.com/rstudio/cheatsheets/master/pngs/thumbnails/purrr-cheatsheet-thumbs.png" width="630" height="252"/></a>  
--->
-## Usage
-
-The following example uses purrr to solve a fairly realistic problem: split a data frame into pieces, fit a model to each piece, compute the summary, then extract the R^2^.
 
 ```{r}
-library(purrr)
-mtcars %>%
-  split(.$cyl) %>% # from base R
-  map(~ lm(mpg ~ wt, data = .)) %>%
-  map(summary) %>%
-  map_dbl("r.squared")
+# seleccionar datos -------------------------------------------------------
+cl <- . %>% select(close)
+
+# Nuevos indicadores ------------------------------------------------------
+SMAtwo <- function(price, nfast = 15, nslow = 80){
+  # Estrategía dos medias
+  price <- pull(price)
+  tibble(difMA = SMA(price, nfast) - SMA(price, nslow))
+}
+
+# Funciones señales -------------------------------------------------------
+sig.SMAtwo <- function(X){
+  # Salida de SMAtwo con columnas('difMA')
+  -sigThresh(X[,'difMA'], 0, 0)
+}
 ```
 
-This example illustrates some of the advantages of purrr functions over the equivalents in base R:
+Estas funciones componen el indicador de la segunda fila de la tabla `tbl.specs`. 
 
-* The first argument is always the data, so purrr works naturally with the pipe.
+<!-- 
 
-* All purrr functions are type-stable. They always return the advertised output
-  type (`map()` returns lists; `map_dbl()` returns double vectors), or they 
-  throw an error.
+VER COMBINAR VARIAS SEÑALES 
+
+-->
+
+## `orden(.)`
+
+Se separo la función ordenes con el objetivo de poder cambiar la forma de salir de la transacción la mayoría en base a stop loss o take profit. Para implementar una nueva metodología para ordenes, se encuentran en "src/Funciones/Ordenes.R" de la
+siguiente forma: [ver script](https://github.com/cuzaheta/Factors/blob/master/src/Funciones/Ordenes.R)
+
+```{r}
+OrdenesSLTP <- function(signal, datos, vloss, vfee = fee, vprofit = profit){
+  isCont <- sum(!is.na(unique(signal))) == 2
+  if(is.na(vloss)) vloss <- 0.999
   
-* All `map()` functions either accept function, formulas (used for succinctly
-  generating anonymous functions), a character vector (used to extract 
-  components by name), or a numeric vector (used to extract by position).
+  if(!isCont){# Discontinuas
+    infOrdenISLTP <- vencomDisSLTP(signal, datos, vloss, vprofit, vfee)
+  }else{# Continuas
+    infOrdenISLTP <- vencomConSLTP(signal, datos, vloss, vprofit, vfee)
+  }
+  return(infOrdenISLTP)
+}
+```
 
-## Code of conduct
+En donde las funciones `vencomDisSLTP` y `vencomConSLTP`, depende si la señal es discontinua o continua, determinado por la variable `isCont`. Se necesitan crear las tres funciones tanto `vencomDisSLTP` y `vencomConSLTP` como `OrdenesSLTP`, esta ultima con el fin de poderla usar en el flujo de la estrategia.
 
-Please note that this project is released with a [Contributor Code of Conduct](CODE_OF_CONDUCT.md).
-By participating in this project you agree to abide by its terms.
+Los principales argumentos de esta función siempre van a ser la señal `signal` que es un vector y la tabla de datos, los argumento secundarios van a variar dependiendo de lo que necesite las funciones de ordenes.
+
+
+## `fun.tran` la función de _transacciones_
+Y por ultimo, esta la función que a partir de las ordenes calcula el backtesting. Está función se encuentra en "src/Funciones/FunEstrategia.R" y tiene los siguiente parámetros.
+
+```{r}
+args(fun.tran)
+```
+
+Necesita la salida de la función ordenes pudiendo ser un vector o un tibble (data_frame) que contenga una columna llamada "orden" con las ordenes en ella. Esto es porque en algunos casos la función ordenes puede sacar mas de un vector resultado de ella, como lo son los tipos de ordenes de salida de la transacción. Y también necesita la tabla de datos.
+
+# Ejemplos
+
+## Correr una estrategia
+
+En caso que estemos programando una nueva estrategia, se puede construir desde cero. Con esto hago referencia tanto la función que genera los nuevos indicadores (siendo acompañada de una función de señales) y una nueva forma de generar las ordenes. El siguiente ejemplo combina dos promedios móviles con un stop loss móvil.
+
+```{r}
+datos30M_bch <- tbl.datos$data[[5]] %>% 
+  mutate(ma = EMA(close, 5),
+         maRet =  ROC(ma, 1))
+
+twoSmaSig <- indSeg(list(nfast = 35, nslow = 63), NULL,
+                    datos = datos30M_bch, indName = 'smaTwo')
+
+ordenSLM <- OrdenesSLMovil(twoSmaSig, datos30M_bch, 0.03)
+
+tbl_trans <- fun.tran(ordenSLM, datos30M_bch)
+
+tbl_trans
+
+plotTest(tbl_trans)
+```
+
+La funcionalidad de separar las funciones en este caso es poder en dado caso buscar una forma de encontrar los parámetros óptimos del indicador y el porcentaje de loss. Como se puede ver en la gráfica este indicador identifica transacciones de compra con alto profit, con el posible fin de mejora este se puede combinar con algún otro indicador para descartar malas entradas. 
+
+## Combinar indicadores
+
+Vamos a combinar dos indicadores el de dos promedios móviles y el ADX, este ultimo nos permite saber la fuerza de la tendencia y quizás sea una buena forma de descartar una gran cantidad de entradas erróneas del indicador base. Esto se puede llevar de la siguiente forma:
+
+```{r}
+twoSmaSig <- indSeg(list(nfast = 20, nslow = 80), NULL,
+                    datos = datos30M_bch, indName = 'smaTwo')
+adxSig <- indSeg(list(n=16), list(limit= 30),
+                 datos = datos30M_bch, indName = 'adx')
+
+sigmix <- mix.ordenConfirm(twoSmaSig, adxSig)
+
+# orden <- Ordenes(sigmix)
+
+ordenSLM <- OrdenesSLMovil(sigmix, datos30M_bch, 0.028)
+
+tbl_trans <- fun.tran(ordenSLM, datos30M_bch)
+
+tbl_trans
+
+plotTest(tbl_trans)
+```
+
+Como se puede ver en este ejemplo tan solo se repite el uso de la función `indSeg(.)` y se incluye una nueva función `mix.ordenConfirm(.)` la cuál combina las señales `twoSmaSig` y `adxSig`. Esta así pensando para realizar la búsqueda y combinación de indicadores de forma rápida, pero en el caso que ya estamos seguros que queremos incluir esta combinación de indicadores como un indicador fijo. La opción pensada al crear esta forma de programar la estrategia, es crear una función `f` del indicador que calcule el paquete de indicadores, y una función `sig.f` que calcule las señales y las combine, así de esta forma incluirla de forma fija a la tabla de especificaciones. Y esto nos permite combinar un sin numero de indicadores para crear la estrategia, o quizás se puede implementar un modelo que utilice como insumo un paquete de indicadores y como salida un vector de señales o ordenes. 
+
+## Obtener tabla de indicadores
+
+Para obtener una tabla de todos los indicadores calculados, se puede utilizar la función `get_indicators` la cuál se encuentra en el script "src/Funciones/FunEstrategia.R"
+
+```{r}
+get_indicators(datos30M_bch)[300:310,] # Para que imprima las filas 300:310 no mas.
+```
+
+
+# Notas 
+- Encontrar una forma de incluir la función de ordenes y/o reducir la tabla de especificaciones
+- Unir las 3 funciones de ordenes de alguna forma, que no sea enredado leerlas luego.
+
+# Pendientes
+- Falta pensar en un parámetro de calidad de la estrategia o forma de evaluar que tan buena es.

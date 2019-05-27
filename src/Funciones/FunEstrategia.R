@@ -1,12 +1,81 @@
 # Script.info ---- 
-# file: FuncionesBactest.R
+# file: FunEstrategia.R
 # date: 24-03-2019
 # description: Funciones necesarias para correr el backtesting
 #---
 
-# Funciones plots ---------------------------------------------------------
-plotBackTest <- function(backtest, datos, nsemana = c('02')){
-  # Realiza el plot del close, con las transacciones del backtest
+# Funciones esenciales ----------------------------------------------------
+
+indSeg <- function(parm = NULL, sigParm = NULL, datos, indName){
+  # Calcula señal apartir de un indicador. Se pueden varias tanto los
+  # parametros del indicador como los que pueda usar la señal.
+  # Argumentos:
+  #   parm: lista de parametros del indicador, si esta en NULL toma
+  #         los argumentos en la tabla de especificaciones.
+  #   sigParm: lista de parametros para la señal, si esta en NULL toma
+  #            los argumentos en la tabla de especificaciones.
+  #   datos: tabla de datos.
+  #   indName: Nombre del indicador en la tabla de especificaciones.
+  
+  if(!exists("tbl.specs")) # Verifica si existe tbl.specs
+    stop('Falta crear la tabla de especificaciones tbl.specs')
+  if(!(indName %in% tbl.specs$nameInd)) # Verifica que este el indicador
+    stop('No se encuentra el nombre del indicador (indName) en la tabla tbl.specs')
+  
+  # Corre el indicador y la señal.
+  specs <- filter(tbl.specs, nameInd == indName)
+  
+  if(is.null(parm)) parm <- specs$parms[[1]]
+  if(is.null(sigParm)) sigParm <- specs$sig.parms[[1]]
+  
+  .datf <- do.call(specs$dat.f, list(datos)) # matriz
+  .indic <- do.call(specs$f, append(list(.datf), parm)) # matriz
+  .signal <- do.call(specs$sig.f, append(list(.indic), sigParm)) # vector
+  
+  return(.signal)
+}
+
+
+fun.tran <- function(ordenes, datos){
+  # Calcula el backtesting apartir de un vector de ordenes.
+  # Argumentos:
+  #   ordenes: Vector de ordenes o tibble(data_frame) que tenga una columna
+  #            llamada 'orden'.
+  #   datos: tabla de datos.
+  
+  if(!is.vector(ordenes)) ordenes <- ordenes$orden
+  tbl.dateClose <- datos %>% 
+    select(close, date)
+  ordenes %>% 
+    tibble(orden = .) %>% 
+    bind_cols(tbl.dateClose, .) %>% 
+    filter(orden %in% c(1,0)) %>% 
+    mutate(tran.num = cumsum(orden),
+           orden = ifelse(orden == 0, 1, -1)) %>% 
+    filter(tran.num != 0) %>% 
+    # quita la ultima si es una transaccion abierta
+    filter(ifelse((seq_along(close)==nrow(.))&(orden==-1), F, T)) %>% 
+    mutate(close = close*(1-orden*fee),
+           retorno = tsibble::tile_dbl(close, ~(.x[2]/.x[1]-1), .size = 2) %>% 
+             rep(each = 2)) %>% 
+    select(-close) %>%
+    mutate(orden = ifelse(orden == -1, 'date.entrada','date.salida')) %>% 
+    spread(orden, date) %>% 
+    mutate(cum.retorno = vInver*cumprod(retorno+1))
+}
+
+# Funciones de gráficas ---------------------------------------------------
+plotBackTest <- function(backtest, datos, semanas = 2 ){
+  # Esta función permite ver mas de cerca las transacciones 
+  # del backtesting en la grafíca de los close. 
+  # Parametros:
+  #   backtest: Salida de la fun.tran, el bactesting.
+  #   datos: La tabla de datos.
+  #   semanas: Vector o entero de las semanas que se quieren
+  #            graficar. El vector se recomienda que sean semanas
+  #            consecutivas.
+  nsemana <- sprintf("%02d", semanas)
+  
   baseFil <- datos %>% 
     filter(format(date, "%V") %in% nsemana) 
   
@@ -32,67 +101,47 @@ plotBackTest <- function(backtest, datos, nsemana = c('02')){
                                 ylim = c(min(baseFil$close), max(baseFil$close) ))
 }
 
+plotTest <- as_mapper(
+  # Crea un plot del retorno acumulado obtenidos del backtesting
+  ~.x %>% 
+    ggplot(aes(date.entrada, cum.retorno)) +
+    geom_line() +
+    geom_hline(yintercept = 100))
 
-plotTest <- as_mapper(~.x %>% # realiza el plot del retorno acumulado backtest
-                        ggplot(aes(date.entrada, cum.retorno)) +
-                        geom_line() +
-                        geom_hline(yintercept = 100))
 
+# Funciones utilidades ----------------------------------------------------
 
-
-# funcion senales ---------------------------------------------------------
-# Genera señal dado los parametros del indicador y de la señal
-indSeg <- function(parm = NULL, sigParm = NULL, datos, indName){
-  # Retorna señal en base a un indicador y parametros.
-  # indName := es el nombre que coincide con alguno en la columna tbl.specs$nameInd.
+get_indicators <- function(datos){
+  # Esta función calcula los indicadores y retorna una tabla con estos
+  # puestos en columnas
+  # Argumentos: 
+  #   datos: la tabla de datos.
+  # Nota: Es necesario que se encuentre creada la tabla de especificaciones.
   
-  if(!exists("tbl.specs")) # Verifica si existe tbl.specs
-    stop('Falta crear la tabla de especificaciones tbl.specs')
-  if(!(indName %in% tbl.specs$nameInd)) # Verifica que este el indicador
-    stop('No se encuentra el nombre del indicador (indName) en la tabla tbl.specs')
+  tbl.datf <- tbl.specs %>% # Extrea los datos para los indicadores
+    distinct(dat.f) %>% 
+    mutate(
+      data = map( dat.f, ~eval(parse(text=paste0(.x,'(datos)'))) ) 
+    )
   
-  # Corre el indicador y la señal.
-  specs <- filter(tbl.specs, nameInd == indName)
+  apply.indi <- tbl.specs %>% # Corre indicadores
+    left_join(tbl.datf, by = "dat.f") %>% 
+    mutate(
+      parms = map2(parms, data, ~append( list(.y),.x) ),
+      indicadores =  invoke_map(f, parms)
+    ) %>% 
+    mutate(
+      indicadores = map(indicadores, as.tibble),
+      colNames = map2(indicadores, nameInd, ~ colnames(.x) %>%
+                        paste(.y,.,sep = '.')),
+      indicadores = map2(indicadores, colNames, magrittr::set_colnames)
+    ) %>%
+    .$indicadores %>%
+    bind_cols()
   
-  if(is.null(parm)) parm <- specs$parms[[1]]
-  if(is.null(sigParm)) sigParm <- specs$sig.parms[[1]]
+  return(apply.indi)
   
-  .datf <- do.call(specs$dat.f, list(datos)) # matriz
-  .indic <- do.call(specs$f, append(list(.datf), parm)) # matriz
-  .signal <- do.call(specs$sig.f, append(list(.indic), sigParm)) # vector
-  
-  return(.signal)
 }
-
-
-# funcion transacciones ---------------------------------------------------
-# Esta funcion saca una tabla de las transacciones en base a un vector 
-# de ordenes 
-
-fun.tran <- function(ordenes, datos){
-  if(!is.vector(ordenes)) ordenes <- ordenes$orden
-  tbl.dateClose <- datos %>% 
-    select(close, date)
-  ordenes %>% 
-    tibble(orden = .) %>% 
-    bind_cols(tbl.dateClose, .) %>% 
-    filter(orden %in% c(1,0)) %>% 
-    mutate(tran.num = cumsum(orden),
-           orden = ifelse(orden == 0, 1, -1)) %>% 
-    filter(tran.num != 0) %>% 
-    # quita la ultima si es una transaccion abierta
-    filter(ifelse((seq_along(close)==nrow(.))&(orden==-1), F, T)) %>% 
-    mutate(close = close*(1-orden*fee),
-           retorno = tsibble::tile_dbl(close, ~(.x[2]/.x[1]-1), .size = 2) %>% 
-             rep(each = 2)) %>% 
-    select(-close) %>%
-    mutate(orden = ifelse(orden == -1, 'date.entrada','date.salida')) %>% 
-    spread(orden, date) %>% 
-    mutate(cum.retorno = vInver*cumprod(retorno+1))
-}
-
-
-# corre estrategia --------------------------------------------------------
 
 runStrategy <- function(parm, sigParm = NULL, datos, 
                         indName, ord.f = Ordenes, ordParm = NULL){
@@ -110,8 +159,7 @@ runStrategy <- function(parm, sigParm = NULL, datos,
 }
 
 
-# funcion corre estrategia  -----------------------------------------------
-# Esta funcion corre las estrategias
+# Esta es la antigua función que corre estrategias.
 # runStrategy <- function(tblDatos, arg.tbls = c('TpOrd','Trans')){
 #   # Argumentos de arg.tbls = c('Indic','Segna','Orden','TpOrd','Trans')
 #   

@@ -146,7 +146,7 @@ sig.ADX <- function(X){ # Nombre directional movement indicator sig.DMI
   # Salida de ADX con columnas("DIp","DIn","DX","ADX")
   ADXh <- X[,'DIp'] - X[,'DIn'] 
   sigThresh(ADXh, 0, 0)
-}
+  }
 sig.ADXL <- function(X, limit = 25){
   # Salida de ADX con columnas("DIp","DIn","DX","ADX")
   ifelse(X[,"ADX"] > limit, 1, -1)
