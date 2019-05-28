@@ -28,7 +28,7 @@ inFunct <- file.path(srcPath,'Funciones')
 inStrat <- file.path(outPath, 'Estrategias')
 
 # functions ---------------------------------------------------------------
-c('Reglas.R','FuncionesBacktest.R', 'Ordenes.R') %>% 
+c('Reglas.R','FunEstrategia.R', 'Ordenes.R') %>% 
   file.path(inFunct, .) %>% 
   map(source, encoding = 'UTF8') %>% 
   invisible()
@@ -116,8 +116,6 @@ for (i in 1:nrow(datosAll)) {
   datosAll$datos[[i]] <- tbl.datos
 }
 
-
-
 datosAll %>% 
   unnest()
 
@@ -128,6 +126,7 @@ base5 <- datosAll$datos[[3]]$data[[5]] %>%
 
 base5.4 <- datosAll$datos[[2]]$data[[5]]
 
+# Comparando temporalidades para ver si coincide el close
 base5 %>%
   filter(date >= dmy('01-02-2018'), 
          date <= dmy('02-02-2018')) %>% 
@@ -137,7 +136,6 @@ base5 %>%
             data = base5.4 %>%
               filter(date >= dmy('01-02-2018'), 
                      date <= dmy('02-02-2018')))
-
 
 # twoSMA-ADX --------------------------------------------------------------
 
@@ -154,11 +152,12 @@ adxSig <- indSeg(list(n=16), list(limit= 30),
 
 sigmix <- mix.ordenConfirm(twoSmaSig, adxSig)
 
+# Con ordenes normales
 orden <- Ordenes(sigmix)
 
-ordenSLM <- OrdenesSLMovil(sigmix, base5, 0.028)
+trans <- fun.tran(orden, base5)
 
-trans <- fun.tran(ordenSLM, base5)
+summary(trans$retorno)
 
 trans %>% 
   ggplot(aes(retorno)) +
@@ -169,30 +168,34 @@ trans %>%
   t()
 
 trans
-trans %>% plotTest()
-
 trans %>% 
+  plotTest()
+
+
+# Con SL movil
+ordenSLM <- OrdenesSLMovil(sigmix, base5, 0.028)
+
+transSL <- fun.tran(ordenSLM, base5)
+
+summary(transSL$retorno)
+
+transSL %>% 
+  ggplot(aes(retorno)) +
+  geom_histogram()
+
+transSL %>% 
+  resumen() %>% 
+  t()
+
+transSL
+transSL %>% 
+  plotTest()
+
+transSL %>% 
   filter(date.entrada <= dmy('01-04-2018'),
          date.entrada >= dmy('01-03-2018')) %>% 
   plotTest()
 
-
-# trans1 <- orden %>% 
-#   fun.tran(base5)
-# trans1 %>% plotTest()
-
-
-# twoSmaSig %>% 
-#   Ordenes() %>% 
-#   fun.tran(base5) %>% 
-#   plotTest()
-# 
-# plotBackTest(trans, base5, sprintf("%02d", 15:16))
-
-tibble(date = base5$date, sig1, sig2, sigmix) %>% 
-  filter(date >= dmy('01-02-2018'), 
-         date <= dmy('02-02-2018')) %>% 
-  View()
 
 # plots -------------------------------------------------------------------
 
@@ -255,11 +258,7 @@ base5 %>%
 
 
 
-
-
-
-# intento -----------------------------------------------------------------
-
+# not rut -----------------------------------------------------------------
 # # # Tabla signos SMAtwo
 # fast <- seq(2, 70, by = 2)
 # slow <- seq(50, 250, by = 4)
@@ -305,9 +304,3 @@ base5 %>%
 #               select(fast, slow, smaSg)) %>% 
 #   left_join(tablaADX %>% 
 #               select(n, lim, adxSg))
-
-
-
-
-
-

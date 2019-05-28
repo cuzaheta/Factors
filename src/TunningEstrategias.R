@@ -104,9 +104,9 @@ plotBackTest <- function(backtest, datos, nsemana = c('02')){
 }
 
 plotTest <- as_mapper(~.x %>%
-  ggplot(aes(date.entrada, cum.retorno)) +
-  geom_line() +
-  geom_hline(yintercept = 100))
+                        ggplot(aes(date.entrada, cum.retorno)) +
+                        geom_line() +
+                        geom_hline(yintercept = 100))
 
 
 
@@ -312,7 +312,7 @@ tbl.datos$data[[5]] %>%
 tbl.datos$data[[2]] %>% 
   ggplot(aes(date, close)) +
   geom_line()
-  
+
 
 # SLMovil
 # 
@@ -343,8 +343,8 @@ base5 <- tbl.datos$data[[5]] %>%
 tbl.datos$data[[3]] %>% 
   ggplot(aes(date, close))+
   geom_line()
-  mutate(date, close)
-  
+mutate(date, close)
+
 # plots -------------------------------------------------------------------
 # # # # Esto es BBands 
 base5Bb <- base5 %>%
@@ -361,33 +361,33 @@ base5Bb <- base5 %>%
     macdHist = (macd - signal)
   ) %>% 
   bind_cols(tibble(rsi = RSI(cl(.))))
-    
-  
+
+
 
 plotB1 <- as_mapper(~base5Bb %>% 
-    filter(format(date, "%V") %in% .x) %>%
-    ggplot() +
-    geom_line(aes(date, close)) +
-    geom_line(aes(date, up), colour = 'blue', alpha = 0.4) +
-    geom_line(aes(date, dn), colour = 'blue', alpha = 0.4) +
-    geom_line(aes(date, mavg), colour = 'red')
-    )
+                      filter(format(date, "%V") %in% .x) %>%
+                      ggplot() +
+                      geom_line(aes(date, close)) +
+                      geom_line(aes(date, up), colour = 'blue', alpha = 0.4) +
+                      geom_line(aes(date, dn), colour = 'blue', alpha = 0.4) +
+                      geom_line(aes(date, mavg), colour = 'red')
+)
 
 plotB2 <- as_mapper(~base5Bb %>% 
                       filter(format(date, "%V") %in% .x) %>%
                       ggplot() +
                       geom_line(aes(date, pctB), colour = 'orange') +
                       geom_hline(yintercept = c(0,1))
-                      # geom_line(aes(date, macdHist)) +
-                      # geom_hline(yintercept = c(0,0.3), linetype="dashed")
-                    )
+                    # geom_line(aes(date, macdHist)) +
+                    # geom_hline(yintercept = c(0,0.3), linetype="dashed")
+)
 
 plotB3 <- as_mapper(~base5Bb %>% 
                       filter(format(date, "%V") %in% .x) %>%
                       ggplot() +
                       geom_line(aes(date, rsi), colour = 'red') +
                       geom_hline(yintercept = c(30,50,70))
-                    )
+)
 
 
 plotB12 <- as_mapper(~plotB1(.x) + plotB2(.x) + plotB3(.x) +
@@ -439,7 +439,7 @@ plot2 <- as_mapper(~tbl2 %>%
                      # geom_hline(yintercept = c(0), linetype="dashed")
                      geom_line(aes(date, adx)) +
                      geom_hline(yintercept = 22, linetype="dashed")
-                   )
+)
 
 plot12 <- as_mapper(~plot1(.x) + plot2(.x) +
                       patchwork::plot_layout(ncol = 1, heights = c(3, 1)))
@@ -464,13 +464,13 @@ slope <- possibly(~lm(.y ~ .x) %>%
 
 tbl3 <- tbl2 %>% 
   mutate(slope = ROC(meanFast))
-  # mutate(slope=future_slide2_dbl(as.numeric(date),meanDif,slope,.size = n_slope))
+# mutate(slope=future_slide2_dbl(as.numeric(date),meanDif,slope,.size = n_slope))
 
 plot3 <- as_mapper(~tbl3 %>% 
-            filter(format(date, "%V") %in% c(.x)) %>% 
-            ggplot(aes(date, slope)) +
-            # geom_hline(yintercept=c(a001,-a001), colour = 'blue')) +
-            geom_line())
+                     filter(format(date, "%V") %in% c(.x)) %>% 
+                     ggplot(aes(date, slope)) +
+                     # geom_hline(yintercept=c(a001,-a001), colour = 'blue')) +
+                     geom_line())
 
 plot13 <- as_mapper(~plot1(.x) + 
                       # plot2(.x) + 
@@ -486,7 +486,7 @@ fast <- seq(2, 70, by = 2)
 slow <- seq(50, 250, by = 2)
 
 tablaSMA <- expand.grid(fast,
-                         slow) %>%
+                        slow) %>%
   set_colnames(c('fast','slow')) %>% 
   as_tibble() %>% 
   filter(slow >= (fast+4)) %>% 

@@ -19,6 +19,8 @@ var svg = d3.select("body").append("svg")
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+
+
 d3.csv("tbl01.csv", function(error, cars) {
 
   // Extract the list of dimensions and create a scale for each.
@@ -43,9 +45,6 @@ d3.csv("tbl01.csv", function(error, cars) {
       .data(cars)
     .enter().append("path")
       .attr("d", path);
-
-
-
 
   // Add a group element for each dimension.
   var g = svg.selectAll(".dimension")
