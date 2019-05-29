@@ -337,14 +337,23 @@ tbl_trans</code></pre>
 <div id="notas" class="section level1">
 <h1>Notas</h1>
 <ul>
-<li>Encontrar una forma de incluir la función de ordenes y/o reducir la tabla de especificaciones</li>
+<li>Encontrar una forma de reducir la tabla de especificaciones.
+<ol style="list-style-type: decimal">
+<li>Una posible forma es usar objetos R6 con las tres funciones dat.f, f, sig.f.</li>
+<li>Crear listas con las tres funciones y tener esa tripla fija. Ejemplo: <code>bandas &lt;- list(hlc, BBands, sig.BBands)</code></li>
+</ol></li>
+<li>Buscar como manejar las funciones de ordenes.
+<ol style="list-style-type: decimal">
+<li>Quizas, dentro de los objetos R6 la salida de sig.f, la señal tenga asociada una clase referente a un tipo de ordenes especifico o utiliza las ordenes normales. Pero esto dificulta mucho el cambio de esto en la practica.</li>
+<li>Si se reduce la tripla(dat.f, f, sig.f) sería incluir esto en especificaciones? Pero esto puede llegar a ser redundante.</li>
+</ol></li>
 <li>Unir las 3 funciones de ordenes de alguna forma, que no sea enredado leerlas luego.</li>
 </ul>
 </div>
 <div id="pendientes" class="section level1">
 <h1>Pendientes</h1>
 <ul>
-<li>Falta pensar en un parámetro de calidad de la estrategia o forma de evaluar que tan buena es.</li>
+<li>Falta pensar en un parámetro de calidad de la estrategia o forma de evaluar que tan buena es esta.</li>
 </ul>
 </div>
 

@@ -90,13 +90,15 @@ plotBackTest <- function(backtest, datos, semanas = 2 ){
                 rename(close_out = close) %>% 
                 select(date, close_out), by = c('OUT' = 'date'))
   
+  message('Linea roja retorno negativo - linea azul retorno positivo ')
+  
   tblaux %>% 
     ggplot() +
     geom_line(aes(date, close), datos) +
-    geom_point(aes(IN, close_in), colour = 'green', fill = 'green', shape =24) +
-    geom_point(aes(OUT, close_out), colour = 'red', fill = 'red', shape =25) +
+    geom_point(aes(IN, close_in), colour = 'darkgreen', fill = 'green', shape =24) +
+    geom_point(aes(OUT, close_out), colour = 'darkred', fill = 'red', shape =25) +
     geom_segment(aes(x=IN, xend=OUT, y=close_in, yend=close_out,  
-                     color = signo), size = 1.3) +
+                     color = signo), size = 1.3, show.legend = F) +
     tidyquant::coord_x_datetime(xlim = c(min(baseFil$date), max(baseFil$date)),
                                 ylim = c(min(baseFil$close), max(baseFil$close) ))
 }

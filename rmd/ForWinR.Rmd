@@ -4,8 +4,8 @@ output:
     self_contained: false
     css: style.css
   # md_document:
-    # pandoc_args: [ "--output= README.md" ]
-    # variant: gfm
+  #   pandoc_args: [ "--output=README.md" ]
+  #   variant: gfm
 ---
 
 <!-- # bookdown::html_document2: -->
@@ -35,7 +35,7 @@ library(tidyverse)
 library(TTR)
 
 inFunct <- file.path('../src','Funciones')
-c('Reglas.R','FuncionesBacktest.R', 'Ordenes.R') %>% 
+c('Reglas.R','FunEstrategia.R', 'Ordenes.R') %>% 
   file.path('../src/Funciones', .) %>% 
   map(source, encoding = 'UTF8') %>% 
   invisible()
@@ -239,8 +239,14 @@ get_indicators(datos30M_bch)[300:310,] # Para que imprima las filas 300:310 no m
 
 
 # Notas 
-- Encontrar una forma de incluir la función de ordenes y/o reducir la tabla de especificaciones
+- Encontrar una forma de reducir la tabla de especificaciones.
+  1. Una posible forma es usar objetos R6 con las tres funciones dat.f, f, sig.f.
+  2. Crear listas con las tres funciones y tener esa tripla fija.
+      Ejemplo: `bandas <- list(hlc, BBands, sig.BBands)`
+- Buscar como manejar las funciones de ordenes.
+  1. Quizas, dentro de los objetos R6 la salida de sig.f, la señal tenga asociada una clase referente a un tipo de ordenes especifico o utiliza las ordenes normales. Pero esto dificulta mucho el cambio de esto en la practica.
+  2. Si se reduce la tripla(dat.f, f, sig.f) sería incluir esto en especificaciones? Pero esto puede llegar a ser aún mas tedioso.
 - Unir las 3 funciones de ordenes de alguna forma, que no sea enredado leerlas luego.
 
 # Pendientes
-- Falta pensar en un parámetro de calidad de la estrategia o forma de evaluar que tan buena es.
+- Falta pensar en un parámetro de calidad de la estrategia o forma de evaluar que tan buena es esta.

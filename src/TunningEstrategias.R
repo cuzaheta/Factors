@@ -348,13 +348,6 @@ mutate(date, close)
 # plots -------------------------------------------------------------------
 # # # # Esto es BBands 
 base5Bb <- base5 %>%
-  mutate(
-    typPrice = (high + low + close)/3,
-    meanPrice = SMA(typPrice, 20),
-    sdPrice =  slide_dbl(typPrice, sd, .size = 20),
-    limSup = meanPrice + 2*sdPrice,
-    limInf = meanPrice - 2*sdPrice
-  ) %>% 
   bind_cols(BBands(hlc(.)) %>% as_tibble()) %>% 
   bind_cols(MACD(cl(.)) %>% as_tibble()) %>% 
   mutate(
@@ -362,39 +355,20 @@ base5Bb <- base5 %>%
   ) %>% 
   bind_cols(tibble(rsi = RSI(cl(.))))
 
-
-
-plotB1 <- as_mapper(~base5Bb %>% 
-                      filter(format(date, "%V") %in% .x) %>%
-                      ggplot() +
-                      geom_line(aes(date, close)) +
-                      geom_line(aes(date, up), colour = 'blue', alpha = 0.4) +
-                      geom_line(aes(date, dn), colour = 'blue', alpha = 0.4) +
-                      geom_line(aes(date, mavg), colour = 'red')
+plot2 <- as_mapper(
+  ~base5Bb %>% 
+    plot_bandas(dn, mavg, up, .x) /
+   base5Bb %>% 
+    plot_oscilador(pctB, .x, c(0,1)) /
+   base5Bb %>% 
+    plot_oscilador(rsi, .x, c(30,50,70))
 )
 
-plotB2 <- as_mapper(~base5Bb %>% 
-                      filter(format(date, "%V") %in% .x) %>%
-                      ggplot() +
-                      geom_line(aes(date, pctB), colour = 'orange') +
-                      geom_hline(yintercept = c(0,1))
-                    # geom_line(aes(date, macdHist)) +
-                    # geom_hline(yintercept = c(0,0.3), linetype="dashed")
-)
+plot2(10:11) *
+  labs(x='') *
+  theme_light() +
+  plot_layout(heights = c(2,1,1))
 
-plotB3 <- as_mapper(~base5Bb %>% 
-                      filter(format(date, "%V") %in% .x) %>%
-                      ggplot() +
-                      geom_line(aes(date, rsi), colour = 'red') +
-                      geom_hline(yintercept = c(30,50,70))
-)
-
-
-plotB12 <- as_mapper(~plotB1(.x) + plotB2(.x) + plotB3(.x) +
-                       patchwork::plot_layout(ncol = 1, heights = c(2,1,1)))
-
-plotB12(sprintf("%02d", 9:12))
-# # # #  Fin BBands
 
 lag(1:10, 2)
 lead(1:10, 2) # for the Slow SMA
@@ -420,68 +394,26 @@ tbl2 <- base5 %>%
     rsi = RSI(close)
   )
 
-plot1 <- as_mapper(~tbl2 %>%
-                     filter(format(date, "%V") %in% c(.x)) %>%
-                     # filter(date(date) %in% seq(ymd('2018-01-07'),ymd('2018-01-14'), by = '1 day')) %>%
-                     # filter(date(date) == ymd('2018-01-31')) %>%
-                     ggplot() +
-                     geom_line(aes(date, close)) +
-                     geom_line(aes(date, meanSlow), colour = 'blue') +
-                     geom_line(aes(date, meanFast), colour = 'red') +
-                     geom_line(aes(date, meanFree), colour = 'darkgreen'))
-
-plot2 <- as_mapper(~tbl2 %>%
-                     filter(format(date, "%V") %in% c(.x)) %>%
-                     ggplot()  +
-                     # geom_line(aes(date, rsi)) +
-                     # geom_hline(yintercept = c(30,70), linetype="dashed")
-                     # geom_line(aes(date, meanDif)) +
-                     # geom_hline(yintercept = c(0), linetype="dashed")
-                     geom_line(aes(date, adx)) +
-                     geom_hline(yintercept = 22, linetype="dashed")
+plot1 <- as_mapper(
+  ~tbl2 %>% 
+    plot_3means(meanSlow, meanFast, meanFree, .x) /
+    tbl2 %>% 
+    plot_oscilador(adx, .x, 30) /
+    trans %>% 
+    plotBackTest(base5, .x) +
+    theme(legend.position="none")
 )
 
-plot12 <- as_mapper(~plot1(.x) + plot2(.x) +
-                      patchwork::plot_layout(ncol = 1, heights = c(3, 1)))
-
-# tbl.datos$data[[5]] %>% 
-#   mutate(mes = month(date)) %>%
-#   filter(mes %in% 6) %>%
-#   ggplot(aes(date, close)) +
-#   geom_line()
-
-# Hasta 46 semanas
-plot12(sprintf("%02d", 9:11))
-
-# # # # Slope of the SMA difference / Relative long SMA
-
-n_slope <- 25
-a001 <- qt(0.001/2, (n_slope-1))
-slope <- possibly(~lm(.y ~ .x) %>% 
-                    summary() %>% 
-                    .$coefficients %>% 
-                    .[2,3], NA_real_)
-
-tbl3 <- tbl2 %>% 
-  mutate(slope = ROC(meanFast))
-# mutate(slope=future_slide2_dbl(as.numeric(date),meanDif,slope,.size = n_slope))
-
-plot3 <- as_mapper(~tbl3 %>% 
-                     filter(format(date, "%V") %in% c(.x)) %>% 
-                     ggplot(aes(date, slope)) +
-                     # geom_hline(yintercept=c(a001,-a001), colour = 'blue')) +
-                     geom_line())
-
-plot13 <- as_mapper(~plot1(.x) + 
-                      # plot2(.x) + 
-                      plot3(.x) + 
-                      patchwork::plot_layout(ncol = 1, heights = c(3, 1, 1)))
-# 10,
-plot13(c('10'))
-plotB12(c('10'))
-
+# Semanas "rango" 10,11
+# No entro en la semana 33
+plot1(10:11) * 
+  labs(x='') * 
+  theme_light() +
+  plot_layout(heights = c(2,2,1))
 
 # TWO-SMA -----------------------------------------------------------------
+
+# Old
 fast <- seq(2, 70, by = 2)
 slow <- seq(50, 250, by = 2)
 
@@ -497,19 +429,23 @@ tictoc::tic()
 tablaSMA20 <-tablaSMA %>% 
   mutate(estadisticas = furrr::future_map(listArg,
                                           runStrategy,
-                                          datos=base5,
-                                          indName='smaTwo'))
+                                          NULL,
+                                          base5,
+                                          'smaTwo'))
 
 tablaSMA2 <- tablaSMA20 %>% 
-  # filter(map_dbl(estadisticas, nrow) > minTrans) %>% 
-  mutate(estadisticas = map(estadisticas, resumen)) %>% 
+  mutate(estadisticas = furrr::future_map(estadisticas, resumen)) %>% 
   unnest(estadisticas) 
-tictoc::toc() # 3 min(2.7)
+tictoc::toc() # 3.2 min
 
 tbl01 <- tablaSMA2 %>% 
   select(-listArg) %>% 
   mutate_all(as.numeric) %>% 
   mutate(ta.trans = N.gan/(N.trans-N.gan))
+
+
+
+
 
 # tbl01 %>%
 #   mutate_all(as.numeric) %>%

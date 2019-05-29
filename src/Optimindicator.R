@@ -17,8 +17,7 @@ library(TTR)
 # library(rPref)
 library(lubridate)
 library(tsibble)
-
-
+library(patchwork) # combine separate ggplots into the same graphic, by `+`
 
 # path --------------------------------------------------------------------
 inPath <- file.path('input')
@@ -28,11 +27,10 @@ inFunct <- file.path(srcPath,'Funciones')
 inStrat <- file.path(outPath, 'Estrategias')
 
 # functions ---------------------------------------------------------------
-c('Reglas.R','FunEstrategia.R', 'Ordenes.R') %>% 
+c('Reglas.R','FunEstrategia.R', 'Ordenes.R', 'GraphUtilities.R') %>% 
   file.path(inFunct, .) %>% 
   map(source, encoding = 'UTF8') %>% 
   invisible()
-
 # Funciones para sacar resumen estrategia
 resumen <- function(tblTransaction, p.extre = 0.1){
   retors <- tblTransaction$retorno
@@ -84,10 +82,9 @@ tbl.specs <- tribble(
 
 # variables ---------------------------------------------------------------
 fee <- 0.002
-# profit <- 10
 vInver <- 100
-
-minTrans <- 100
+# profit <- 10
+# minTrans <- 100
 
 # lectura datos -----------------------------------------------------------
 
@@ -127,7 +124,7 @@ base5 <- datosAll$datos[[3]]$data[[5]] %>%
 base5.4 <- datosAll$datos[[2]]$data[[5]]
 
 # Comparando temporalidades para ver si coincide el close
-base5 %>%
+base5 %>% # ----------------------  NO COINCIDE !!!!!!!!!!!!!!!!!!!!!!!
   filter(date >= dmy('01-02-2018'), 
          date <= dmy('02-02-2018')) %>% 
   ggplot(aes(date, close)) +
@@ -139,13 +136,9 @@ base5 %>%
 
 # twoSMA-ADX --------------------------------------------------------------
 
-35; 63
-32; 64
-20; 80
-
 # Con 30min parametros 25:80
 
-twoSmaSig <- indSeg(list(nfast = 20, nslow = 80), NULL,
+twoSmaSig <- indSeg(list(nfast = 25, nslow = 80), NULL,
                     datos = base5, indName = 'smaTwo')
 adxSig <- indSeg(list(n=16), list(limit= 30),
                  datos = base5, indName = 'adx')
@@ -191,11 +184,22 @@ transSL
 transSL %>% 
   plotTest()
 
-transSL %>% 
-  filter(date.entrada <= dmy('01-04-2018'),
-         date.entrada >= dmy('01-03-2018')) %>% 
-  plotTest()
+df <- data.frame(
+  gp = factor(rep(letters[1:3], each = 10)),
+  y = rnorm(30)
+)
 
+p1 <- ggplot(df, aes(gp, y)) +
+  geom_point() +
+  geom_point(data = ds, aes(y = mean), colour = 'red', size = 3)
+
+p2 <- ggplot(df) +
+  geom_point(aes(gp, y)) +
+  geom_point(data = ds, aes(gp, mean), colour = 'red', size = 3)
+
+
+
+# lobstr::ast(1/3*5 + 2 * 3)
 
 # plots -------------------------------------------------------------------
 
@@ -207,56 +211,22 @@ tbl2 <- base5 %>%
     adx = ADX(hlc(.), 16)[,'ADX']
   )
 
-plot1 <- as_mapper(~tbl2 %>%
-                     filter(format(date, "%V") %in% c(.x)) %>%
-                     ggplot() +
-                     geom_line(aes(date, close)) +
-                     geom_line(aes(date, meanSlow), colour = 'red') +
-                     geom_line(aes(date, meanFast), colour = 'blue') +
-                     geom_line(aes(date, meanFree), colour = 'darkgreen')
-                   )
-plot2 <- as_mapper(~tbl2 %>%
-                     filter(format(date, "%V") %in% c(.x)) %>%
-                     ggplot()  +
-                     geom_line(aes(date, adx)) +
-                     geom_hline(yintercept = 30, linetype="dashed")
-                   )
+plot1 <- as_mapper(
+  ~tbl2 %>% 
+    plot_3means(meanSlow, meanFast, meanFree, .x) /
+   tbl2 %>% 
+    plot_oscilador(adx, .x, 30) /
+   trans %>% 
+    plotBackTest(base5, .x) +
+    theme(legend.position="none")
+)
 
-plot3 <- as_mapper(~plotBackTest(trans, base5, .x) +
-                     theme(legend.position="none")
-                   )
-
-plot123 <- as_mapper(~plot1( .x ) +
-            plot3( .x ) +
-            plot2( .x ) +
-            patchwork::plot_layout(ncol = 1, heights = c(2,2,1))
-            )
 # Semanas "rango" 10,11
 # No entro en la semana 33
-plot1( sprintf("%02d", 9:12) ) +
-  plot3( sprintf("%02d", 9:12) ) +
-  plot2( sprintf("%02d", 9:12) ) +
-  patchwork::plot_layout(ncol = 1, heights = c(2,2,1))
-
-plot123(sprintf("%02d", 9:12))
-
-plotBackTest(trans1, base5, sprintf("%02d", 10:11))
-
-base5 %>%
-  mutate(
-    meanFast = SMA(close, 35),
-    meanSlow = SMA(close, 80),
-    meanFree = EMA(close, 35),
-    adx = ADX(hlc(.), 16)[,'ADX']
-  ) %>%
-  filter(format(date, "%V") %in% sprintf("%02d", 10:11)) %>%
-  ggplot() +
-  geom_line(aes(date, close)) +
-  # geom_line(aes(date, meanSlow), colour = 'red') +
-  geom_line(aes(date, meanFast), colour = 'blue') +
-  geom_line(aes(date, meanFree), colour = 'darkgreen')
-
-
+plot1(10:11) * 
+  labs(x='') * 
+  theme_light() +
+  plot_layout(heights = c(2,2,1))
 
 # not rut -----------------------------------------------------------------
 # # # Tabla signos SMAtwo
