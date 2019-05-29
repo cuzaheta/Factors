@@ -135,7 +135,7 @@ sig.SAR <- function(X){
   ifelse(X[,'sar'] > X[,'close'], -1, 1) %>% 
     as.vector()
 }
-sig.SAR3 <- function(X, dots = 3){
+sig.SARN <- function(X, dots = 3){
   # Salida de SARM con columnas("sar","close")
   indi <- ifelse(X[,'sar'] > X[,'close'], -1, 1)
   tsibble::slide_chr(indi, ~ifelse(sum(.x)==dots,1,-1) ,
