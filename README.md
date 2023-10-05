@@ -4,7 +4,7 @@
 
 <!-- <p style="font-size:34px;line-height: 1.1;">Implementación de indicadores</p> -->
 
-# Implementación de indicadores <img src="logo/logo.png" align="right" />
+# Implementación de indicadores <img src="logo.png" align="right" />
 
 [![Life
 cycle](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#stable)
