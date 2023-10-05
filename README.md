@@ -362,24 +362,3 @@ get_indicators(datos30M_bch)[300:310,] # Para que imprima las filas 300:310 no m
     ## 11    39.1   10.7    57.1    34.9      0.00432    0.146      0.156    0.166
     ## # … with 1 more variable: bands.pctB <dbl>
 
-# Notas
-
-  - Encontrar una forma de reducir la tabla de especificaciones.
-    1.  Una posible forma es usar objetos R6 con las tres funciones
-        dat.f, f, sig.f.
-    2.  Crear listas con las tres funciones y tener esa tripla fija.
-        Ejemplo: `bandas <- list(hlc, BBands, sig.BBands)`
-  - Buscar como manejar las funciones de ordenes.
-    1.  Quizas, dentro de los objetos R6 la salida de sig.f, la señal
-        tenga asociada una clase referente a un tipo de ordenes
-        especifico o utiliza las ordenes normales. Pero esto dificulta
-        mucho el cambio de esto en la practica.
-    2.  Si se reduce la tripla(dat.f, f, sig.f) sería incluir esto en
-        especificaciones? Pero esto puede llegar a ser aún mas tedioso.
-  - Unir las 3 funciones de ordenes de alguna forma, que no sea enredado
-    leerlas luego.
-
-# Pendientes
-
-  - Falta pensar en un parámetro de calidad de la estrategia o forma de
-    evaluar que tan buena es esta.
